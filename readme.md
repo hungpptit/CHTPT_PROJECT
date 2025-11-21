@@ -61,7 +61,7 @@ python -m venv .venv
 Kích hoạt (Windows):
 
 ```
-.\.venv\Scriptsctivate
+.\.venv\Scripts\activate
 ```
 
 ---
@@ -130,7 +130,7 @@ Port: 18825
 Kích hoạt venv nếu có:
 
 ```
-.\.venv\Scriptsctivate
+.\.venv\Scripts\activate
 ```
 
 Chạy:
