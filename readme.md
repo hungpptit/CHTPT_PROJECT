@@ -76,22 +76,20 @@ pip install -r requirements.txt
 
 ## 🚀 Chạy Server (Local LAN hoặc chạy với Ngrok)
 
-Chạy mặc định:
 
-```
-python server_main.py
-```
 
-Chạy với tuỳ chọn:
+Chạy với server ở chế độ mở (không giới hạn IP):
 
 ```
 python server_main.py --host 0.0.0.0 --port 5000
 ```
 
-Whitelisting IP (tuỳ chọn):
+Lệnh khởi chạy Server với cơ chế Whitelist IP và Lease Timeout:
 
 ```
-python server_main.py --host 0.0.0.0 --port 5000 --allow 127.0.0.1
+python server_main.py --host 0.0.0.0 --port 5000 \
+  --allow <IP_client1> --allow <IP_client2> --allow <IP_client3> --allow <IP_client4> \
+  --lease 30
 ```
 
 ---
