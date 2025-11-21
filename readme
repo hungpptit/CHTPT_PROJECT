@@ -1,70 +1,210 @@
-1) IP của server
+# 🏧 ATM Mutual Exclusion System (Python + Socket)
 
-LAN (cùng mạng):
+Hệ thống mô phỏng ATM sử dụng Centralized Coordinator để đảm bảo Mutual Exclusion, xử lý rút tiền, đồng bộ số dư và hỗ trợ kết nối từ xa qua **ngrok TCP**.
 
-Windows: mở CMD → gõ ipconfig → lấy dòng IPv4 Address (vd 192.168.1.100).
+---
 
-Linux: ip -4 addr show → lấy inet 192.168.x.y/....
+## 📋 Mục Lục
+- [Tổng Quan](#tổng-quan)
+- [Yêu Cầu Hệ-Thống](#yêu-cầu-hệ-thống)
+- [Clone-Dự-Án](#clone-dự-án)
+- [Tạo-Môi-Trường-Virtualenv](#tạo-môi-trường-virtualenv)
+- [Cài-Đặt-Dependencies](#cài-đặt-dependencies)
+- [Chạy-Server](#chạy-server)
+- [Expose-Server-bằng-ngrok-TCP](#expose-server-bằng-ngrok-tcp)
+- [Chạy-Client-Python](#chạy-client-python)
+- [Chạy-Client-EXE](#chạy-client-exe)
+- [Build-File-EXE](#build-file-exe)
+- [Cấu-Trúc-Dự-Án](#cấu-trúc-dự-án)
+- [requirements.txt](#requirementstxt)
 
-macOS: ipconfig getifaddr en0 (Wi‑Fi) hoặc ifconfig | grep "inet ".
-→ Dùng IP LAN này nếu client cũng ở cùng LAN/VPN.
+---
 
-Internet (khác mạng/NAT):
-Trên server, mở trình duyệt và tìm “what is my IP” → lấy Public IP.
-Nhớ mở cổng và NAT port‑forward 5000 tới máy server.
+## 🎯 Tổng Quan
+Dự án gồm hai thành phần:
 
-2) IP của từng client (để cho vào --allow)
+1. **Server / Coordinator**
+   - Điều phối REQUEST / RELEASE
+   - Xử lý rút tiền (WITHDRAW)
+   - Giữ hàng đợi FIFO đảm bảo Mutual Exclusion
+   - Quản lý số dư tài khoản + số dư ATM
 
-Cách nhanh: trên mỗi client, mở trình duyệt tìm “what is my ip” → copy Public IP.
+2. **Client ATM GUI**
+   - Giao diện Tkinter mô phỏng máy ATM
+   - Popup nhập số tiền (tự format 3,000,000)
+   - Hỗ trợ chạy dạng Python hoặc dạng file `.exe`
 
-Nếu client và server cùng LAN, bạn có thể whitelist IP LAN của từng client (lấy bằng ipconfig/ip addr như trên).
+---
 
-Mẹo: Chạy server chưa bật --allow lần đầu, cho client connect 1 lần; xem log server sẽ in:
-[NET] REGISTER C1 from 113.190.xx.yy:54321
-→ 113.190.xx.yy chính là IP để đưa vào --allow. Xong tắt server và chạy lại với whitelist.
+## 🖥 Yêu Cầu Hệ Thống
+- Python 3.10+
+- pip
+- Ngrok 
 
-Điền các địa chỉ này ở đâu?
-Cách KHÔNG sửa code (khuyên dùng)
+---
 
-Server (trên máy server):
+## 📦 Clone Dự Án
 
-python server_main.py --host 0.0.0.0 --port 5000 \
-  --allow <IP_client1> --allow <IP_client2> --allow <IP_client3> --allow <IP_client4> \
-  --lease 30
+```
+git clone https://github.com/hungpptit/CHTPT_PROJECT.git
+cd CHTPT_PROJECT
+```
 
+---
 
-Nếu nhiều client cùng dùng một Wi‑Fi/NAT, bạn có thể chỉ cần 1 IP public (tất cả máy sau NAT sẽ hiện cùng IP trước server).
+## 🧩 Tạo Môi Trường Virtualenv
 
-Client (trên mỗi máy client):
+```
+python -m venv .venv
+```
 
+Kích hoạt (Windows):
+
+```
+.\.venv\Scriptsctivate
+```
+
+---
+
+## ⚙ Cài Đặt Dependencies
+
+```
+pip install -r requirements.txt
+```
+
+---
+
+## 🚀 Chạy Server (Local LAN hoặc chạy với Ngrok)
+
+Chạy mặc định:
+
+```
+python server_main.py
+```
+
+Chạy với tuỳ chọn:
+
+```
+python server_main.py --host 0.0.0.0 --port 5000
+```
+
+Whitelisting IP (tuỳ chọn):
+
+```
+python server_main.py --host 0.0.0.0 --port 5000 --allow 127.0.0.1
+```
+
+---
+
+## 🌐 Expose Server bằng ngrok TCP
+
+### 1. Login và thêm token
+
+```
+ngrok config add-authtoken <YOUR_TOKEN>
+```
+
+### 2. Mở tunnel TCP cho server (port 5000)
+
+```
+ngrok tcp 5000
+```
+
+Bạn sẽ nhận được địa chỉ dạng:
+
+```
+tcp://0.tcp.ap.ngrok.io:18825
+```
+
+### 3. Điền host + port này vào Client GUI:
+
+```
+Host: 0.tcp.ap.ngrok.io
+Port: 18825
+```
+
+---
+
+## 💻 Chạy Client Python
+
+Kích hoạt venv nếu có:
+
+```
+.\.venv\Scriptsctivate
+```
+
+Chạy:
+
+```
 python client_gui.py
+```
 
+---
 
-Trong cửa sổ, điền Server IP = IP của server (LAN hoặc Public tuỳ trường hợp), Port = 5000 → Connect → Request.
+## 🟦 Chạy Client EXE (không cần Python)
 
-Cách MUỐN “cố định sẵn” trong code
+Chạy trực tiếp:
 
-Mặc định Server IP trong GUI client (để khỏi phải gõ lại):
-Mở client_gui.py, tìm hai dòng này và sửa:
+```
+dist/ATM_Client.exe
+```
 
-self.server_host = tk.StringVar(value="127.0.0.1")  # đổi "127.0.0.1" → "203.0.113.5" (IP server của bạn)
-self.server_port = tk.IntVar(value=5000)            # nếu đổi cổng thì sửa ở đây
+Không cần cài bất kỳ thư viện nào.
 
+---
 
-Mặc định danh sách allow trên server (nếu thích không truyền tham số):
-Trong server_main.py, tìm dòng parser.add_argument("--allow", action="append", default=[], ...)
-và sửa thành (ví dụ):
+## 🏗 Build File EXE
 
-parser.add_argument("--allow", action="append",
-                    default=["113.190.xx.yy","171.224.aa.bb","42.119.cc.dd","14.162.ee.ff"])
+```
+pyinstaller --noconsole --onefile --name ATM_Client client_gui.py
+```
 
+Kết quả:
 
-Hoặc sau args = parser.parse_args() thêm:
+```
+dist/ATM_Client.exe
+build/
+ATM_Client.spec
+```
 
-if not args.allow:
-    args.allow = ["113.190.xx.yy","171.224.aa.bb","42.119.cc.dd","14.162.ee.ff"]
+---
 
+## 📁 Cấu Trúc Dự Án
 
-python server_main.py --host 0.0.0.0 --port 5000 \
-  --allow <IP_client1> --allow <IP_client2> --allow <IP_client3> --allow <IP_client4> \
-  --lease 30
+```
+CHTPT_PROJECT/
+│  server_main.py
+│  client_gui.py
+│  client_net.py
+│  coordinator.py
+│  protocol.py
+│  README.md
+│  requirements.txt
+│
+├─dist/
+│   └── ATM_Client.exe
+├─build/
+└─.venv/
+```
+
+---
+
+## 📦 requirements.txt
+
+```
+pyinstaller
+```
+
+---
+
+README này bao gồm:
+- Clone dự án
+- Tạo venv
+- Cài đặt trong venv
+- Chạy server
+- Chạy server qua ngrok
+- Chạy client Python
+- Chạy client exe
+- Build lại exe
+- Cấu trúc thư mục chuẩn
+
